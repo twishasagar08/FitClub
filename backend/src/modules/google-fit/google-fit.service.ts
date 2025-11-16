@@ -1,9 +1,15 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Inject, forwardRef } from '@nestjs/common';
 import axios from 'axios';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class GoogleFitService {
   private readonly GOOGLE_FIT_API_URL = 'https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate';
+
+  constructor(
+    @Inject(forwardRef(() => 'AuthService'))
+    private authService: any,
+  ) {}
 
   async fetchDailySteps(accessToken: string): Promise<number> {
     try {
@@ -55,6 +61,13 @@ export class GoogleFitService {
       return totalSteps;
     } catch (error) {
       if (error.response) {
+        // Check if it's an authentication error (401)
+        if (error.response.status === 401) {
+          throw new HttpException(
+            'Google Fit token expired or invalid',
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
         throw new HttpException(
           `Google Fit API error: ${error.response.data.error?.message || 'Unknown error'}`,
           error.response.status,
@@ -64,6 +77,26 @@ export class GoogleFitService {
         'Failed to fetch data from Google Fit',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  async fetchDailyStepsWithRefresh(user: User): Promise<number> {
+    try {
+      return await this.fetchDailySteps(user.googleAccessToken);
+    } catch (error) {
+      // If token expired, refresh and retry
+      if (error.status === HttpStatus.UNAUTHORIZED && this.authService) {
+        try {
+          const newAccessToken = await this.authService.refreshGoogleAccessToken(user);
+          return await this.fetchDailySteps(newAccessToken);
+        } catch (refreshError) {
+          throw new HttpException(
+            'Failed to refresh token and fetch steps',
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
+      }
+      throw error;
     }
   }
 }

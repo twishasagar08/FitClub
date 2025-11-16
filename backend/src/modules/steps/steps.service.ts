@@ -70,7 +70,8 @@ export class StepsService {
       throw new NotFoundException('User does not have Google Fit access token');
     }
 
-    const steps = await this.googleFitService.fetchDailySteps(user.googleAccessToken);
+    // Use the method that handles token refresh automatically
+    const steps = await this.googleFitService.fetchDailyStepsWithRefresh(user);
 
     return await this.create({
       userId,

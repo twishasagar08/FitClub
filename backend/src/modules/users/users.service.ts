@@ -43,4 +43,27 @@ export class UsersService {
     user.totalSteps += steps;
     return await this.usersRepository.save(user);
   }
+
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return await this.usersRepository.findOne({ where: { googleId } });
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return await this.usersRepository.findOne({ where: { email } });
+  }
+
+  async updateGoogleTokens(
+    userId: string,
+    accessToken: string,
+    refreshToken: string,
+  ): Promise<User> {
+    const user = await this.findOne(userId);
+    user.googleAccessToken = accessToken;
+    user.googleRefreshToken = refreshToken;
+    return await this.usersRepository.save(user);
+  }
+
+  async save(user: User): Promise<User> {
+    return await this.usersRepository.save(user);
+  }
 }

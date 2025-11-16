@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import configuration from './config/configuration';
+import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { StepsModule } from './modules/steps/steps.module';
 import { GoogleFitModule } from './modules/google-fit/google-fit.module';
@@ -32,6 +33,7 @@ import { StepRecord } from './modules/steps/step.entity';
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
+    AuthModule,
     UsersModule,
     StepsModule,
     GoogleFitModule,
