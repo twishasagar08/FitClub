@@ -19,15 +19,15 @@ export class AuthController {
     try {
       const user = await this.authService.handleGoogleLogin(req.user);
 
-      // Redirect to frontend with user info
+      // Redirect to frontend dashboard with user info
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
       res.redirect(
-        `${frontendUrl}/auth/callback?success=true&userId=${user.id}&name=${encodeURIComponent(user.name)}`,
+        `${frontendUrl}/dashboard?success=true&userId=${user.id}&name=${encodeURIComponent(user.name)}`,
       );
     } catch (error) {
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
       res.redirect(
-        `${frontendUrl}/auth/callback?success=false&error=${encodeURIComponent(error.message)}`,
+        `${frontendUrl}/dashboard?success=false&error=${encodeURIComponent(error.message)}`,
       );
     }
   }
