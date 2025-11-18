@@ -1,14 +1,18 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../entities/user.entity';
-import { CreateUserDto } from '../dto/create-user.dto';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { User } from "../entities/user.entity";
+import { CreateUserDto } from "../dto/create-user.dto";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private usersRepository: Repository<User>
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -17,7 +21,7 @@ export class UsersService {
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
     }
 
     const user = this.usersRepository.create(createUserDto);
@@ -26,7 +30,7 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return await this.usersRepository.find({
-      order: { name: 'ASC' },
+      order: { name: "ASC" },
     });
   }
 
@@ -55,7 +59,7 @@ export class UsersService {
   async updateGoogleTokens(
     userId: string,
     accessToken: string,
-    refreshToken: string,
+    refreshToken: string
   ): Promise<User> {
     const user = await this.findOne(userId);
     user.googleAccessToken = accessToken;
