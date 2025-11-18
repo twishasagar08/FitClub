@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from '../users/user.entity';
+import { User } from '../entities/user.entity';
 
 @Entity('step_records')
 export class StepRecord {

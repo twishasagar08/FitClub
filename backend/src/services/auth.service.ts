@@ -1,15 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { User } from '../users/user.entity';
-import { GoogleUser } from './interfaces/google-user.interface';
-import { ConfigService } from '@nestjs/config';
+import { UsersService } from '../services/users.service';
+import { User } from '../entities/user.entity';
+import { GoogleUser } from '../interfaces/google-user.interface';
 import axios from 'axios';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private configService: ConfigService,
   ) {}
 
   async handleGoogleLogin(googleUser: GoogleUser): Promise<{
@@ -70,8 +68,8 @@ export class AuthService {
 
     try {
       const response = await axios.post('https://oauth2.googleapis.com/token', {
-        client_id: this.configService.get<string>('GOOGLE_CLIENT_ID'),
-        client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET'),
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
         refresh_token: user.googleRefreshToken,
         grant_type: 'refresh_token',
       });

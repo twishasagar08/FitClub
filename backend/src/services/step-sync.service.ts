@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { UsersService } from '../users/users.service';
-import { StepsService } from '../steps/steps.service';
+import { UsersService } from '../services/users.service';
+import { StepsService } from '../services/steps.service';
 
 @Injectable()
 export class StepSyncService {

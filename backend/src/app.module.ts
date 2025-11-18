@@ -1,36 +1,30 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
-import configuration from './config/configuration';
-import { AuthModule } from './modules/auth/auth.module';
-import { UsersModule } from './modules/users/users.module';
-import { StepsModule } from './modules/steps/steps.module';
-import { GoogleFitModule } from './modules/google-fit/google-fit.module';
-import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
-import { SchedulerModule } from './modules/scheduler/scheduler.module';
-import { User } from './modules/users/user.entity';
-import { StepRecord } from './modules/steps/step.entity';
+import { AuthModule } from './modules/auth.module';
+import { UsersModule } from './modules/users.module';
+import { StepsModule } from './modules/steps.module';
+import { GoogleFitModule } from './modules/google-fit.module';
+import { LeaderboardModule } from './modules/leaderboard.module';
+import { SchedulerModule } from './modules/scheduler.module';
+import { User } from './entities/user.entity';
+import { StepRecord } from './entities/step.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration],
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('database.host'),
-        port: configService.get('database.port'),
-        username: configService.get('database.username'),
-        password: configService.get('database.password'),
-        database: configService.get('database.database'),
-        entities: [User, StepRecord],
-        synchronize: true, // Only for development
-      }),
-      inject: [ConfigService],
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DATABASE_HOST || 'localhost',
+      port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
+      username: process.env.DATABASE_USERNAME || 'postgres',
+      password: process.env.DATABASE_PASSWORD || 'postgres',
+      database: process.env.DATABASE_NAME || 'fitclub',
+      entities: [User, StepRecord],
+      synchronize: true, // Only for development
     }),
     ScheduleModule.forRoot(),
     AuthModule,

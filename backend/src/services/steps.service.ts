@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { StepRecord } from './step.entity';
-import { CreateStepDto } from './dto/create-step.dto';
-import { UsersService } from '../users/users.service';
-import { GoogleFitService } from '../google-fit/google-fit.service';
+import { StepRecord } from '../entities/step.entity';
+import { CreateStepDto } from '../dto/create-step.dto';
+import { UsersService } from '../services/users.service';
+import { GoogleFitService } from '../services/google-fit.service';
 
 @Injectable()
 export class StepsService {

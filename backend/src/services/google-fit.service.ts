@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus, Inject, forwardRef } from '@nestjs/common';
 import axios from 'axios';
-import { User } from '../users/user.entity';
+import { User } from '../entities/user.entity';
 
 @Injectable()
 export class GoogleFitService {

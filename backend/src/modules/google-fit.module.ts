@@ -1,6 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { GoogleFitService } from './google-fit.service';
-import { AuthModule } from '../auth/auth.module';
+import { GoogleFitService } from '../services/google-fit.service';
+import { AuthModule } from '../modules/auth.module';
 
 @Module({
   imports: [forwardRef(() => AuthModule)],

@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Body, Param, ValidationPipe } from '@nestjs/common';
-import { StepsService } from './steps.service';
-import { CreateStepDto } from './dto/create-step.dto';
-import { StepRecord } from './step.entity';
+import { StepsService } from '../services/steps.service';
+import { CreateStepDto } from '../dto/create-step.dto';
+import { StepRecord } from '../entities/step.entity';
 
 @Controller('steps')
 export class StepsController {
