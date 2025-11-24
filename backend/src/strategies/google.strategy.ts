@@ -9,8 +9,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_REDIRECT_URI,
-      accessType: 'offline',
-      prompt: 'select_account consent', // Forces account picker + consent screen
+      accessType: 'offline', // Required to get refresh token
+      prompt: 'consent', // Force consent screen to ALWAYS get refresh token
       scope: [
         'profile',
         'email',
@@ -19,6 +19,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       ],
     });
     console.log('GoogleStrategy initialized with callback:', process.env.GOOGLE_REDIRECT_URI);
+    console.log('Strategy config: accessType=offline, prompt=consent (forces refresh token)');
   }
 
   async validate(

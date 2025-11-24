@@ -70,13 +70,11 @@ export class StepsService {
       throw new NotFoundException('User does not have Google Fit access token');
     }
 
-    // Use the method that handles token refresh automatically
-    const steps = await this.googleFitService.fetchDailyStepsWithRefresh(user);
+    // Fetch YESTERDAY's steps (more accurate than today's partial data)
+    const steps = await this.googleFitService.fetchYesterdaySteps(user);
 
-    return await this.create({
-      userId,
-      steps,
-    });
+    // Save yesterday's steps
+    return await this.saveDailySteps(userId, steps);
   }
 
   /**
@@ -145,6 +143,55 @@ export class StepsService {
     yesterday.setDate(yesterday.getDate() - 1);
     
     return await this.createForDate(userId, yesterday, steps);
+  }
+
+  /**
+   * Sync historical data for a user (backfill missing days)
+   * Fetches steps from Google Fit for the past N days
+   */
+  async syncHistoricalData(
+    userId: string,
+    daysToSync: number = 7,
+  ): Promise<{ synced: number; records: StepRecord[] }> {
+    const user = await this.usersService.findOne(userId);
+
+    if (!user.googleAccessToken) {
+      throw new NotFoundException('User does not have Google Fit access token');
+    }
+
+    const records: StepRecord[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Loop through each day and fetch steps
+    for (let i = 1; i <= daysToSync; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+
+      const startOfDay = new Date(date);
+      const endOfDay = new Date(date);
+      endOfDay.setDate(endOfDay.getDate() + 1);
+
+      try {
+        // Fetch steps for this specific day with auto-refresh
+        const steps = await this.googleFitService.fetchStepsWithAutoRefresh(
+          user,
+          startOfDay.getTime(),
+          endOfDay.getTime(),
+        );
+
+        // Save the record
+        const record = await this.createForDate(userId, date, steps);
+        records.push(record);
+      } catch (error) {
+        console.error(`Failed to sync steps for ${date.toDateString()}:`, error.message);
+      }
+    }
+
+    return {
+      synced: records.length,
+      records,
+    };
   }
 
   private async recalculateTotalSteps(userId: string): Promise<void> {

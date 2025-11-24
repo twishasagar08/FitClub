@@ -42,6 +42,10 @@ export class UsersService {
     return user;
   }
 
+  async findById(id: string): Promise<User> {
+    return this.findOne(id);
+  }
+
   async updateTotalSteps(userId: string, steps: number): Promise<User> {
     const user = await this.findOne(userId);
     user.totalSteps += steps;

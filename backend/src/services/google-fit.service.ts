@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import axios from 'axios';
 import { User } from '../entities/user.entity';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class GoogleFitService {
@@ -12,6 +13,7 @@ export class GoogleFitService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private authService: AuthService,
   ) {}
 
   /**
@@ -60,8 +62,8 @@ export class GoogleFitService {
       );
     }
 
-    // Try using the current access token first
-    return user.googleAccessToken;
+    // Use AuthService to get valid token (handles expiry check and refresh)
+    return await this.authService.getValidAccessToken(user.id);
   }
 
   /**
@@ -144,22 +146,19 @@ export class GoogleFitService {
     endMillis: number,
   ): Promise<number> {
     try {
+      // Get valid access token (automatically refreshes if expired)
       const accessToken = await this.getValidAccessToken(user);
       return await this.fetchSteps(accessToken, startMillis, endMillis);
     } catch (error) {
-      // If token expired, refresh and retry
+      // If token expired despite refresh attempt, try one more time
       if (error.message === 'TOKEN_EXPIRED' && user.googleRefreshToken) {
         try {
-          this.logger.log(`Attempting to refresh token for user ${user.id}`);
+          this.logger.log(`Attempting emergency token refresh for user ${user.id}`);
           
-          // Refresh the access token
-          const newAccessToken = await this.refreshAccessToken(user.googleRefreshToken);
+          // Force refresh the access token via AuthService
+          const newAccessToken = await this.authService.refreshGoogleAccessToken(user.id);
           
-          // Update user's access token in database
-          user.googleAccessToken = newAccessToken;
-          await this.usersRepository.save(user);
-          
-          this.logger.log(`Token refreshed successfully for user ${user.id}`);
+          this.logger.log(`Emergency token refresh successful for user ${user.id}`);
           
           // Retry the request with new token
           return await this.fetchSteps(newAccessToken, startMillis, endMillis);

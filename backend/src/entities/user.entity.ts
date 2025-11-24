@@ -21,6 +21,9 @@ export class User {
   @Column({ nullable: true })
   googleRefreshToken: string;
 
+  @Column({ nullable: true, type: 'bigint' })
+  googleTokenExpiresAt: number;
+
   @Column({ default: 0 })
   totalSteps: number;
 
