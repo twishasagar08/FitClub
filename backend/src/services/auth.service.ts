@@ -1,8 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { User } from '../entities/user.entity';
 import { GoogleUser } from '../interfaces/google-user.interface';
-import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -10,48 +9,66 @@ export class AuthService {
     private usersService: UsersService,
   ) {}
 
-  async handleGoogleLogin(googleUser: GoogleUser): Promise<{
-    id: string;
-    name: string;
-    email: string;
-  }> {
+  /**
+   * Creates or updates a user with Google OAuth data
+   * IMPORTANT: Only updates refresh token if it's non-null to prevent overwriting
+   */
+  async createOrUpdateGoogleUser(googleUser: GoogleUser): Promise<User> {
     const { profile, accessToken, refreshToken } = googleUser;
     const googleId = profile.id;
     const email = profile.emails[0].value;
     const name = profile.displayName;
 
-    // Check if user exists by Google ID
+    // Find user by Google ID
     let user = await this.usersService.findByGoogleId(googleId);
 
-    if (!user) {
-      // Check if user exists by email
-      user = await this.usersService.findByEmail(email);
-
-      if (user) {
-        // User exists with email but no Google ID - link accounts
-        user.googleId = googleId;
-        user.googleAccessToken = accessToken;
-        user.googleRefreshToken = refreshToken;
-        await this.usersService.save(user);
-      } else {
-        // Create new user
-        const newUser = new User();
-        newUser.name = name;
-        newUser.email = email;
-        newUser.googleId = googleId;
-        newUser.googleAccessToken = accessToken;
-        newUser.googleRefreshToken = refreshToken;
-        newUser.totalSteps = 0;
-        user = await this.usersService.save(newUser);
-      }
-    } else {
-      // Update tokens for existing user
+    if (user) {
+      // User exists - update tokens
       user.googleAccessToken = accessToken;
+      
+      // CRITICAL: Only update refresh token if Google returns one
+      // This prevents overwriting an existing refresh token with null
       if (refreshToken) {
         user.googleRefreshToken = refreshToken;
       }
-      await this.usersService.save(user);
+      
+      return await this.usersService.save(user);
     }
+
+    // User doesn't exist by Google ID - check by email
+    user = await this.usersService.findByEmail(email);
+
+    if (user) {
+      // User exists with email but no Google ID - link accounts
+      user.googleId = googleId;
+      user.googleAccessToken = accessToken;
+      
+      // Only set refresh token if provided
+      if (refreshToken) {
+        user.googleRefreshToken = refreshToken;
+      }
+      
+      return await this.usersService.save(user);
+    }
+
+    // Create new user
+    const newUser = new User();
+    newUser.name = name;
+    newUser.email = email;
+    newUser.googleId = googleId;
+    newUser.googleAccessToken = accessToken;
+    newUser.googleRefreshToken = refreshToken; // Can be null for new users
+    newUser.totalSteps = 0;
+    
+    return await this.usersService.save(newUser);
+  }
+
+  async handleGoogleLogin(googleUser: GoogleUser): Promise<{
+    id: string;
+    name: string;
+    email: string;
+  }> {
+    const user = await this.createOrUpdateGoogleUser(googleUser);
 
     // Return safe user data
     return {
@@ -59,32 +76,5 @@ export class AuthService {
       name: user.name,
       email: user.email,
     };
-  }
-
-  async refreshGoogleAccessToken(user: User): Promise<string> {
-    if (!user.googleRefreshToken) {
-      throw new UnauthorizedException('No refresh token available');
-    }
-
-    try {
-      const response = await axios.post('https://oauth2.googleapis.com/token', {
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        refresh_token: user.googleRefreshToken,
-        grant_type: 'refresh_token',
-      });
-
-      const newAccessToken = response.data.access_token;
-
-      // Update user's access token
-      user.googleAccessToken = newAccessToken;
-      await this.usersService.save(user);
-
-      return newAccessToken;
-    } catch (error) {
-      throw new UnauthorizedException(
-        'Failed to refresh access token: ' + error.message,
-      );
-    }
   }
 }

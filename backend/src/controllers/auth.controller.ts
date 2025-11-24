@@ -9,8 +9,12 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleLogin() {
+  async googleLogin(@Req() req) {
     // Initiates the Google OAuth2 flow
+    // The AuthGuard will automatically use the strategy config with:
+    // - prompt: 'select_account consent'
+    // - accessType: 'offline'
+    // This forces Google to show the account picker
   }
 
   @Get('google/callback')

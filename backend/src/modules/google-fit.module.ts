@@ -1,17 +1,11 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { GoogleFitService } from '../services/google-fit.service';
-import { AuthModule } from '../modules/auth.module';
+import { User } from '../entities/user.entity';
 
 @Module({
-  imports: [forwardRef(() => AuthModule)],
-  providers: [
-    GoogleFitService,
-    {
-      provide: 'AuthService',
-      useFactory: (authModule) => authModule?.authService,
-      inject: [{ token: AuthModule, optional: true }],
-    },
-  ],
+  imports: [TypeOrmModule.forFeature([User])],
+  providers: [GoogleFitService],
   exports: [GoogleFitService],
 })
 export class GoogleFitModule {}

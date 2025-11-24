@@ -2,7 +2,10 @@ import React from 'react';
 
 const LoginPage = () => {
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:3000/auth/google';
+    // Force Google account picker by adding prompt=select_account
+    // This ensures user can choose ANY account, not just device login
+    const backendUrl = 'http://localhost:3000';
+    window.location.href = `${backendUrl}/auth/google?prompt=select_account`;
   };
 
   return (

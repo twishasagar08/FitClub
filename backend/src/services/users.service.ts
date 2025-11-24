@@ -67,6 +67,38 @@ export class UsersService {
     return await this.usersRepository.save(user);
   }
 
+  /**
+   * Finds all users who have connected their Google Fit account
+   * (users with a valid refresh token)
+   */
+  async findUsersWithGoogleFit(): Promise<User[]> {
+    return await this.usersRepository
+      .createQueryBuilder('user')
+      .where('user.googleRefreshToken IS NOT NULL')
+      .andWhere("user.googleRefreshToken != ''")
+      .getMany();
+  }
+
+  /**
+   * Updates only the Google access token for a user
+   * Used after refreshing an expired token
+   */
+  async updateTokens(userId: string, newAccessToken: string): Promise<User> {
+    const user = await this.findOne(userId);
+    user.googleAccessToken = newAccessToken;
+    return await this.usersRepository.save(user);
+  }
+
+  /**
+   * Increments the user's total steps
+   * Used when syncing daily steps
+   */
+  async addToTotalSteps(userId: string, steps: number): Promise<User> {
+    const user = await this.findOne(userId);
+    user.totalSteps += steps;
+    return await this.usersRepository.save(user);
+  }
+
   async save(user: User): Promise<User> {
     return await this.usersRepository.save(user);
   }
