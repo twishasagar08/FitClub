@@ -2,10 +2,14 @@ import { Controller, Get, Post, Put, Body, Param, Query, ValidationPipe } from '
 import { StepsService } from '../services/steps.service';
 import { CreateStepDto } from '../dto/create-step.dto';
 import { StepRecord } from '../entities/step.entity';
+import { StepSyncService } from '../services/step-sync.service';
 
 @Controller('steps')
 export class StepsController {
-  constructor(private readonly stepsService: StepsService) {}
+  constructor(
+    private readonly stepsService: StepsService,
+    private readonly stepSyncService: StepSyncService,
+  ) {}
 
   @Post()
   async create(
@@ -22,6 +26,19 @@ export class StepsController {
   @Put('sync/:userId')
   async syncFromGoogleFit(@Param('userId') userId: string): Promise<StepRecord> {
     return await this.stepsService.syncFromGoogleFit(userId);
+  }
+
+  /**
+   * Sync all users with Google Fit
+   * POST /steps/sync-all
+   */
+  @Post('sync-all')
+  async syncAllUsers(): Promise<{ message: string; timestamp: string }> {
+    await this.stepSyncService.manualSyncAllUsers();
+    return {
+      message: 'Sync initiated for all users with Google Fit',
+      timestamp: new Date().toISOString(),
+    };
   }
 
   /**

@@ -42,4 +42,10 @@ export const getLeaderboard = async () => {
   return response.data;
 };
 
+// Sync all users from Google Fit
+export const syncAllUsersFromGoogleFit = async () => {
+  const response = await api.post('/steps/sync-all');
+  return response.data;
+};
+
 export default api;

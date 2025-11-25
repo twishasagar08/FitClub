@@ -10,6 +10,7 @@ import { LeaderboardModule } from './modules/leaderboard.module';
 import { SchedulerModule } from './modules/scheduler.module';
 import { User } from './entities/user.entity';
 import { StepRecord } from './entities/step.entity';
+import { DataSourceOptions } from 'typeorm';
 
 @Module({
   imports: [
@@ -18,13 +19,12 @@ import { StepRecord } from './entities/step.entity';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
-      username: process.env.DATABASE_USERNAME || 'postgres',
-      password: process.env.DATABASE_PASSWORD || 'postgres',
-      database: process.env.DATABASE_NAME || 'fitclub',
-      entities: [User, StepRecord],
-      synchronize: true, // Only for development
+      url: 'postgresql://neondb_owner:npg_LGmOsW3Pq1ip@ep-muddy-dust-a17yjitz-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',   // <--- use the Neon URL
+      autoLoadEntities: true,          // loads all entities automatically
+      synchronize: true,               // only for development
+      ssl: {
+        rejectUnauthorized: false,     // Neon requires SSL
+      },
     }),
     ScheduleModule.forRoot(),
     AuthModule,
