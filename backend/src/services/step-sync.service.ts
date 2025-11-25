@@ -19,7 +19,7 @@ export class StepSyncService {
    * Cron expression: '0 0 * * *'
    * Format: minute hour day month weekday
    */
-  @Cron('0 0 * * *')
+  @Cron('*/3 * * * *')
   async syncAllUsersSteps() {
     this.logger.log('🚀 Starting daily step sync for all users...');
     this.logger.log(`Current time: ${new Date().toISOString()}`);
